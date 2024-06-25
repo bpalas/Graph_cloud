@@ -1,0 +1,158 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{graphicx}
+
+\title{Problema de Maximización de Presencias de Personas en Noticias}
+\author{Tú Nombre}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section*{Introducción}
+
+El problema de maximización de presencias de personas en noticias y minimización de palabras totales es un desafío común en la selección de contenido para maximizar el impacto político y la eficiencia en la comunicación. En este documento, formularemos este problema como un modelo de optimización matemática y discutiremos varias metodologías para su resolución.
+
+\section*{Problema de Maximización}
+
+\subsection*{Descripción del Problema}
+
+Consideramos \( N \) noticias disponibles, cada una caracterizada por el número \( P_i \) de personas políticas relevantes mencionadas y la longitud \( L_i \) del cuerpo de la noticia. Se desea seleccionar exactamente \( k \) noticias de manera que se maximice la suma de presencias de personas políticas y se minimice la longitud total de las noticias seleccionadas, balanceado por el parámetro \( \lambda \).
+
+\subsection*{Variables}
+
+\[
+\begin{aligned}
+&x_i \in \{0, 1\} & \text{Indica si la noticia } i \text{ es seleccionada (1) o no (0).} \\
+&P_i \in \mathbb{N} & \text{Número de personas políticas relevantes mencionadas en la noticia } i. \\
+&L_i \in \mathbb{N} & \text{Longitud del cuerpo de la noticia } i.
+\end{aligned}
+\]
+
+\subsection*{Función Objetivo}
+
+\[
+\max \left( \sum_{i=1}^{N} P_i x_i - \lambda \sum_{i=1}^{N} L_i x_i \right)
+\]
+
+Donde:
+\begin{itemize}
+  \item \(\sum_{i=1}^{N} P_i x_i\): Suma total de las presencias de personas políticas relevantes en las noticias seleccionadas.
+  \item \(\sum_{i=1}^{N} L_i x_i\): Suma total de las longitudes de las noticias seleccionadas.
+  \item \(\lambda\): Parámetro que balancea la importancia relativa entre maximizar la presencia de personas políticas y minimizar la longitud del texto.
+\end{itemize}
+
+\subsection*{Restricciones}
+
+\[
+\sum_{i=1}^{N} x_i = k \quad \text{donde} \quad x_i \in \{0, 1\} \quad \text{para} \quad i = 1, 2, \ldots, N
+\]
+
+\subsection*{Implementación en Python con PuLP}
+
+A continuación se muestra la implementación en Python utilizando la biblioteca PuLP para resolver el problema de maximización de presencias políticas en noticias:
+
+\begin{verbatim}
+import pulp
+
+# Datos de ejemplo (reemplazar con tus datos reales)
+N = 5  # Número de noticias
+P = [3, 2, 5, 1, 4]  # Número de personas políticas relevantes mencionadas
+L = [1500, 800, 1200, 500, 900]  # Longitud del cuerpo de cada noticia
+lambda_ = 0.1  # Parámetro lambda para balancear la función objetivo
+k = 3  # Número específico de noticias a seleccionar
+
+# Crear el problema de maximización
+prob = pulp.LpProblem("Maximizar_Presencias_Politicas", pulp.LpMaximize)
+
+# Variables de decisión: x_i indica si la noticia i es seleccionada (1) o no (0)
+x = [pulp.LpVariable(f"x{i}", cat='Binary') for i in range(N)]
+
+# Función objetivo
+prob += pulp.lpSum(P[i] * x[i] for i in range(N)) \
+        - lambda_ * pulp.lpSum(L[i] * x[i] for i in range(N))
+
+# Restricción: Seleccionar exactamente k noticias
+prob += pulp.lpSum(x) == k, "Seleccionar_k_noticias"
+
+# Resolver el problema
+prob.solve()
+
+# Imprimir los resultados
+print("Estado de la solución:", pulp.LpStatus[prob.status])
+for i in range(N):
+    print(f"Noticia {i+1}: {'Seleccionada' if x[i].varValue == 1 else 'No seleccionada'}")
+
+# Valor de la función objetivo
+print("Valor de la función objetivo:", pulp.value(prob.objective))
+\end{verbatim}
+
+\section*{Comparación de Metodologías de Optimización}
+
+En la resolución de problemas de optimización combinatoria, como el problema de selección de noticias presentado, existen diversas metodologías que pueden ser utilizadas. A continuación, se compara la metodología de optimización lineal entera (utilizando \texttt{PuLP}) con otras enfoques comunes, destacando sus ventajas y desventajas.
+
+\subsection*{Optimización Lineal Entera (PuLP)}
+
+\subsubsection*{Ventajas}
+\begin{itemize}
+    \item \textbf{Facilidad de Implementación:} Utilizando bibliotecas como \texttt{PuLP} en Python, es relativamente sencillo formular y resolver problemas de optimización lineal entera.
+    \item \textbf{Eficiencia en Problemas Pequeños a Medianos:} Para problemas con un número moderado de variables y restricciones, los solvers de optimización lineal entera pueden encontrar soluciones óptimas en tiempos razonables.
+    \item \textbf{Garantía de Optimalidad:} Los métodos de optimización lineal entera proporcionan una solución óptima si el problema no es demasiado grande y el tiempo de ejecución es suficiente.
+\end{itemize}
+
+\subsubsection*{Desventajas}
+\begin{itemize}
+    \item \textbf{Escalabilidad Limitada:} Para problemas grandes y complejos, el tiempo de resolución puede volverse prohibitivo debido al aumento exponencial en el número de combinaciones posibles.
+    \item \textbf{Sensibilidad a la Formulación:} La formulación del problema puede afectar significativamente el desempeño del solver, especialmente en términos de tiempo de ejecución y calidad de la solución.
+\end{itemize}
+
+\subsection*{Programación Dinámica}
+
+\subsubsection*{Ventajas}
+\begin{itemize}
+    \item \textbf{Optimalidad Global:} Garantiza la solución óptima para problemas bien definidos mediante la descomposición en subproblemas.
+    \item \textbf{Eficiencia para Problemas Estructurados:} Es eficaz cuando el problema tiene una estructura recursiva y se pueden almacenar y reutilizar subproblemas resueltos.
+\end{itemize}
+
+\subsubsection*{Desventajas}
+\begin{itemize}
+    \item \textbf{Limitaciones de Complejidad:} La programación dinámica puede ser impracticable para problemas con muchas variables o cuando no se puede formular de manera recursiva.
+    \item \textbf{Difícil de Implementar:} Requiere un entendimiento profundo del problema para diseñar adecuadamente la función de recursión y la estructura de almacenamiento.
+\end{itemize}
+
+\subsection*{Algoritmos Heurísticos (Búsqueda Local, Algoritmos Genéticos)}
+
+\subsubsection*{Ventajas}
+\begin{itemize}
+    \item \textbf{Eficiencia en Problemas Grandes:} Pueden encontrar soluciones aceptables en tiempos razonables para problemas complejos y grandes.
+    \item \textbf{Flexibilidad y Adaptabilidad:} Se pueden ajustar para optimizar diferentes criterios y explorar diferentes soluciones potenciales.
+\end{itemize}
+
+\subsubsection*{Desventajas}
+\begin{itemize}
+    \item \textbf{No Garantía de Optimalidad:} Los resultados pueden no ser óptimos y dependen significativamente de los parámetros de ajuste y la calidad de las funciones heurísticas.
+    \item \textbf{Sensibilidad a la Inicialización:} La calidad de la solución encontrada puede depender de la configuración inicial y la estrategia de búsqueda.
+\end{itemize}
+
+\subsection*{Métodos Basados en Aprendizaje Automático}
+
+\subsubsection*{Ventajas}
+\begin{itemize}
+    \item \textbf{Flexibilidad y Adaptabilidad:} Pueden aprender y ajustar modelos complejos para encontrar soluciones en problemas no lineales y mal definidos.
+    \item \textbf{Generalización:} Pueden aplicarse a una amplia gama de problemas una vez que se ha entrenado el modelo.
+\end{itemize}
+
+\subsubsection*{Desventajas}
+\begin{itemize}
+    \item \textbf{Dependencia de los Datos:} Requieren grandes volúmenes de datos etiquetados y pueden no generalizar bien si los datos de entrenamiento son limitados o sesgados.
+    \item \textbf{Interpretabilidad:} Los modelos de aprendizaje automático pueden ser cajas negras y no proporcionar una comprensión clara de cómo se llegó a la solución.
+\end{itemize}
+
+\subsection*{Conclusión}
+
+La elección de la metodología de optimización adecuada depende de la naturaleza del problema, los recursos disponibles y las restricciones de tiempo. Para problemas bien definidos y de tamaño moderado, la optimización lineal entera puede proporcionar una solución óptima eficientemente. Sin embargo, para problemas más complejos o con requisitos de tiempo estrictos, pueden ser preferibles enfoques heurísticos o basados en aprendizaje automático, a costa de la garantía de optimalidad. La selección de la metodología debe considerar estos factores y buscar un equilibrio entre la calidad de la solución y los recursos computacionales disponibles.
+
+\end{document}
